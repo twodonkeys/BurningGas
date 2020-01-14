@@ -1,2 +1,2 @@
 # BurningGas
-ReinforceLearning
+ReinforceLearning by playing BurningGas Game
