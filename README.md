@@ -1,2 +1,3 @@
 # BurningGas
-ReinforceLearning by playing BurningGas Game
+
+Simple BurningGas Game
