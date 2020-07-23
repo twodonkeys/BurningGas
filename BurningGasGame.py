@@ -11,7 +11,7 @@ import math
 import time
 from huepy import *
 import random
-class BuringGas():
+class BurningGas():
     def __init__(self,valve_Gas,valve_Air):#初始化
         self.terminal=False#True为失败，False为正常
         self.random_Flow=0.02#空气煤气流量扰动幅度
@@ -56,7 +56,7 @@ class BuringGas():
         Flow_PerHour=Flow_PerSecond*3600#每小时流量
         return Flow_PerSecond
 
-    def getV_burned(self,H2,CO,CH4,C2H4,CO2,N2,H2O,AirFuelRatio):#单位（m3）煤气燃烧后的气体体积
+    def GetV_burned(self,H2,CO,CH4,C2H4,CO2,N2,H2O,AirFuelRatio):#单位（m3）煤气燃烧后的气体体积
         return (H2 + CO + 3 * CH4 + 4 * C2H4 + CO2 + N2 + H2O) + 0.79 * AirFuelRatio
 
     def FirstOrderInertia(self,input:float,output:float,lamda:float):#lamda越小延迟越大
@@ -64,7 +64,7 @@ class BuringGas():
         out_num=input if abs(output-input)<1 else (input*lamda+output*(1-lamda))
         return out_num
 
-    def buring(self):
+    def Burning(self):
         if self.Flow_Gas>(self.Flow_Air/self.AirFuelRatio):#煤气过量
             #单位煤气不完全燃烧产生的热量
             self.Heat_Unit=(self.Heat*(self.Flow_Air/self.AirFuelRatio))/self.Flow_Gas
@@ -96,18 +96,18 @@ class BuringGas():
             self.V_burned_C2H4=0
             self.V_burned_CO=0
             self.V_burned_H2=0
-    def reset(self):
+    def Reset(self):
         print(lightpurple("重置..."))
         time.sleep(0.5)
         self.__init__()
 
-    def print_out(self):
+    def Print_out(self):
         print("\r 煤气阀门设定和反馈:({0},{1});空气阀门设定和反馈:({2},{3});燃烧温度:({4});最优空燃比:({5});实际空燃比:({6});煤气热值:({7})..."
               .format(str(round(self.valve_Gas,1)), str(round(self.ValueOpening_Gas,1)), str(round(self.valve_Air,1)),
-                      str(round(self.ValueOpening_Air,1)), str(round(self.T_buring,1)), str(round(self.AirFuelRatio,3)),
+                      str(round(self.ValueOpening_Air,1)), str(round(self.T_burning,1)), str(round(self.AirFuelRatio,3)),
                       str(round(self.AirFuelRatio_Actual,3)),str(round(self.Heat_Unit))) + "循环" + str(self.t)+"次", end="")  # 没有end不会此行更新
 
-    def step(self, valve_Gas, valve_Air):  # 动作传入
+    def Step(self, valve_Gas, valve_Air):  # 动作传入
         self.valve_Gas=(float(valve_Gas) if valve_Gas<100 else 100) if valve_Gas>0 else 0
         self.valve_Air=(float(valve_Air) if valve_Air<100 else 100) if valve_Air>0 else 0
         self.ValueOpening_Gas=self.FirstOrderInertia(float(self.valve_Gas),float(self.ValueOpening_Gas),0.5)
@@ -123,7 +123,7 @@ class BuringGas():
         self.AirFuelRatio = self.GetAirFuelRatio(CO=self.Component_CO, H2=self.Component_H2, CH4=self.Component_CH4,
                                               C2H4=self.Component_C2H4, O2=self.Component_O2)
         # 单位煤气理论生成废气
-        self.V_burned_Unit = self.getV_burned(H2=self.Component_H2, CO=self.Component_CO, CH4=self.Component_CH4,
+        self.V_burned_Unit = self.GetV_burned(H2=self.Component_H2, CO=self.Component_CO, CH4=self.Component_CH4,
                                            C2H4=self.Component_C2H4, CO2=self.Component_CO2, N2=self.Component_N2,
                                            H2O=self.Component_H2O, AirFuelRatio=self.AirFuelRatio)
         # 单位煤气热量：热值
@@ -131,7 +131,7 @@ class BuringGas():
         # 实际空燃比
         self.AirFuelRatio_Actual = self.Flow_Air / self.Flow_Gas
         # 燃烧ing
-        self.buring()
+        self.Burning()
         # 空气比热容
         self.C_Air = 1.3
         # 煤气比热容
@@ -151,24 +151,24 @@ class BuringGas():
         # 燃烧后总热量
         self.i_Sum = (self.i_Air + self.i_Gas + self.i_H) / self.V_burned
         # 理论燃烧温度计算
-        self.T_buring = self.i_Sum / self.C_Exhaust-self.T_waste
+        self.T_burning = self.i_Sum / self.C_Exhaust-self.T_waste
 
-        state=(self.valve_Gas,self.valve_Air,self.ValueOpening_Gas,self.ValueOpening_Air,self.T_buring)
+        state=(self.valve_Gas,self.valve_Air,self.ValueOpening_Gas,self.ValueOpening_Air,self.T_burning)
         if self.ValueOpening_Air<=3 or self.ValueOpening_Gas<=3 or abs(self.AirFuelRatio_Actual-self.AirFuelRatio)>0.5:
             # 燃烧条件失败，游戏结束
             self.terminal=True
             print("游戏失败！")
             time.sleep(self.time_cycle)
         self.t+=1
-        self.print_out()
+        self.Print_out()
         time.sleep(self.time_cycle)
         return(state,self.terminal)
 
 if __name__=='__main__':
     valve_gas=70
     valve_air=68
-    bur=BuringGas(valve_gas,valve_air)
+    bur=BurningGas(valve_gas,valve_air)
     while 1:
         #valve_gas += 1
-        bur.step(valve_Gas=valve_gas,valve_Air=valve_air)
+        bur.Step(valve_Gas=valve_gas,valve_Air=valve_air)
 
